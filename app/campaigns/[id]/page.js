@@ -185,7 +185,7 @@ export default function CampaignEditorPage() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '20px' }}>
+            <div className="editor-grid">
                 {/* Left: Settings */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {/* Campaign Name */}

@@ -76,7 +76,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Two columns: Recent logs + Active campaigns */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="dashboard-grid">
         {/* Recent DM Logs */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
