@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  instabot:
+    build: .
+    container_name: instabot
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    volumes:
+      # SQLite DB를 NAS 로컬에 저장 (컨테이너 삭제해도 데이터 유지)
+      - ./data:/app/db
+    environment:
+      - NODE_ENV=production
+      - META_APP_ID=${META_APP_ID}
+      - META_APP_SECRET=${META_APP_SECRET}
+      - INSTAGRAM_ACCESS_TOKEN=${INSTAGRAM_ACCESS_TOKEN}
+      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN:-instabot_verify_2026}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3100}

@@ -1,0 +1,8 @@
+node_modules
+.next
+db
+data
+.env.local
+.git
+*.md
+tunnel.log

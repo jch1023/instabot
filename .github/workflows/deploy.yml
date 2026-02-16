@@ -1,0 +1,37 @@
+name: Deploy InstaBot to Synology NAS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy files to NAS via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          key: ${{ secrets.NAS_SSH_KEY }}
+          port: ${{ secrets.NAS_SSH_PORT }}
+          source: ".,!node_modules,!.next,!db,!.git"
+          target: "/volume1/docker/instabot"
+          overwrite: true
+
+      - name: Build & Restart on NAS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          key: ${{ secrets.NAS_SSH_KEY }}
+          port: ${{ secrets.NAS_SSH_PORT }}
+          script: |
+            cd /volume1/docker/instabot
+            sudo docker-compose down
+            sudo docker-compose up -d --build
+            echo "✅ InstaBot deployed successfully!"
