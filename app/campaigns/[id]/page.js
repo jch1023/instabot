@@ -9,6 +9,9 @@ export default function CampaignEditorPage() {
 
     const [campaign, setCampaign] = useState({
         name: '',
+        igMediaId: '',
+        igMediaUrl: '',
+        igMediaCaption: '',
         triggerType: 'all',
         keywords: '',
         checkFollower: false,
@@ -20,7 +23,10 @@ export default function CampaignEditorPage() {
 
     const [activeTab, setActiveTab] = useState('default');
     const [saving, setSaving] = useState(false);
+    const [mediaPosts, setMediaPosts] = useState([]);
+    const [loadingMedia, setLoadingMedia] = useState(true);
 
+    // Load campaign data (if editing)
     useEffect(() => {
         if (!isNew) {
             fetch(`/api/campaigns/${params.id}`)
@@ -29,6 +35,9 @@ export default function CampaignEditorPage() {
                     if (data && !data.error) {
                         setCampaign({
                             name: data.name || '',
+                            igMediaId: data.ig_media_id || '',
+                            igMediaUrl: data.ig_media_url || '',
+                            igMediaCaption: data.ig_media_caption || '',
                             triggerType: data.trigger_type || 'all',
                             keywords: (data.keywords || []).join(', '),
                             checkFollower: !!data.check_follower,
@@ -44,8 +53,37 @@ export default function CampaignEditorPage() {
         }
     }, [isNew, params.id]);
 
+    // Load Instagram media posts
+    useEffect(() => {
+        setLoadingMedia(true);
+        fetch('/api/instagram/media')
+            .then(r => r.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setMediaPosts(data);
+                }
+            })
+            .catch(console.error)
+            .finally(() => setLoadingMedia(false));
+    }, []);
+
     const updateField = (field, value) => {
         setCampaign(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleMediaSelect = (mediaId) => {
+        if (mediaId === 'all') {
+            updateField('igMediaId', '');
+            updateField('igMediaUrl', '');
+            updateField('igMediaCaption', '');
+        } else {
+            const post = mediaPosts.find(m => m.id === mediaId);
+            if (post) {
+                updateField('igMediaId', post.id);
+                updateField('igMediaUrl', post.media_url || post.thumbnail_url || '');
+                updateField('igMediaCaption', (post.caption || '').slice(0, 100));
+            }
+        }
     };
 
     const handleSave = async () => {
@@ -57,6 +95,9 @@ export default function CampaignEditorPage() {
 
         const payload = {
             name: campaign.name,
+            ig_media_id: campaign.igMediaId || null,
+            ig_media_url: campaign.igMediaUrl || null,
+            ig_media_caption: campaign.igMediaCaption || null,
             trigger_type: campaign.triggerType,
             keywords: campaign.keywords.split(',').map(k => k.trim()).filter(Boolean),
             check_follower: campaign.checkFollower,
@@ -123,6 +164,9 @@ export default function CampaignEditorPage() {
         }
     };
 
+    // Get selected post info for display
+    const selectedPost = mediaPosts.find(m => m.id === campaign.igMediaId);
+
     return (
         <div className="animate-fade-in">
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -163,15 +207,73 @@ export default function CampaignEditorPage() {
                             💬 트리거 설정
                         </h3>
 
+                        {/* Post Selection */}
                         <div className="form-group">
                             <label className="form-label">게시물 선택</label>
-                            <select className="form-select" defaultValue="">
-                                <option value="" disabled>게시물을 선택하세요... (Instagram 연결 후 활성화)</option>
-                                <option value="all">📋 모든 게시물 (전체 적용)</option>
-                            </select>
-                            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                                Instagram 연결 후 게시물 목록이 자동으로 표시됩니다
-                            </div>
+                            {loadingMedia ? (
+                                <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                                    ⏳ Instagram 게시물 불러오는 중...
+                                </div>
+                            ) : (
+                                <>
+                                    <select
+                                        className="form-select"
+                                        value={campaign.igMediaId || 'all'}
+                                        onChange={e => handleMediaSelect(e.target.value)}
+                                    >
+                                        <option value="all">📋 모든 게시물 (전체 적용)</option>
+                                        {mediaPosts.map(post => (
+                                            <option key={post.id} value={post.id}>
+                                                {post.media_type === 'VIDEO' ? '🎬' : '📸'}{' '}
+                                                {(post.caption || '캡션 없음').slice(0, 50)}
+                                                {(post.caption || '').length > 50 ? '...' : ''}{' '}
+                                                ({new Date(post.timestamp).toLocaleDateString('ko-KR')})
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    {/* Selected post thumbnail */}
+                                    {selectedPost && (
+                                        <div className="animate-fade-in" style={{
+                                            marginTop: '10px', display: 'flex', gap: '12px', alignItems: 'center',
+                                            padding: '10px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)',
+                                            border: '1px solid var(--border)',
+                                        }}>
+                                            {(selectedPost.media_url || selectedPost.thumbnail_url) && (
+                                                <img
+                                                    src={selectedPost.thumbnail_url || selectedPost.media_url}
+                                                    alt="선택된 게시물"
+                                                    style={{
+                                                        width: '60px', height: '60px', borderRadius: '8px',
+                                                        objectFit: 'cover', flexShrink: 0,
+                                                    }}
+                                                />
+                                            )}
+                                            <div style={{ overflow: 'hidden' }}>
+                                                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>
+                                                    {selectedPost.media_type === 'VIDEO' ? '🎬 릴스/영상' : '📸 이미지'}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '12px', color: 'var(--text-secondary)',
+                                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                                }}>
+                                                    {selectedPost.caption || '캡션 없음'}
+                                                </div>
+                                                <a href={selectedPost.permalink} target="_blank" rel="noopener"
+                                                    style={{ fontSize: '11px', color: 'var(--primary-light)' }}>
+                                                    Instagram에서 보기 ↗
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {mediaPosts.length === 0 && (
+                                        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
+                                            ⚠️ 게시물을 불러올 수 없습니다. 설정 페이지에서 Instagram 연결을 확인하세요.
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
 
                         <div className="form-group">
@@ -301,6 +403,7 @@ export default function CampaignEditorPage() {
                         <div style={{ marginTop: '16px', padding: '14px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
                             <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>📋 캠페인 요약</div>
                             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+                                <div>• 게시물: {campaign.igMediaId ? (selectedPost ? `${(selectedPost.caption || '').slice(0, 30)}...` : campaign.igMediaId) : '모든 게시물'}</div>
                                 <div>• 트리거: {campaign.triggerType === 'all' ? '모든 댓글' : `키워드 (${campaign.keywords || '미설정'})`}</div>
                                 <div>• 팔로우 체크: {campaign.checkFollower ? '✅ ON' : '❌ OFF'}</div>
                                 {campaign.checkFollower ? (
