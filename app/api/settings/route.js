@@ -10,6 +10,9 @@ export async function GET() {
             webhook_verify_token: getSetting('webhook_verify_token'),
             meta_app_id: getSetting('meta_app_id'),
             meta_app_secret: getSetting('meta_app_secret') ? '••••••••' : '',
+            instagram_access_token: getSetting('instagram_access_token') ? '••••••••' : '',
+            ig_user_id: getSetting('ig_user_id') || '',
+            ig_username: getSetting('ig_username') || '',
         };
         return NextResponse.json(settings);
     } catch (error) {
@@ -24,8 +27,13 @@ export async function PUT(request) {
     try {
         const body = await request.json();
 
+        const allowedKeys = [
+            'webhook_verify_token', 'meta_app_id', 'meta_app_secret',
+            'instagram_access_token', 'ig_user_id', 'ig_username',
+        ];
+
         for (const [key, value] of Object.entries(body)) {
-            if (['webhook_verify_token', 'meta_app_id', 'meta_app_secret'].includes(key)) {
+            if (allowedKeys.includes(key)) {
                 // Don't update masked values
                 if (value !== '••••••••') {
                     setSetting(key, value);

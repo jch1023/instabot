@@ -2,21 +2,41 @@
 import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
-    const [connected, setConnected] = useState(false);
+    const [igProfile, setIgProfile] = useState(null);
+    const [verifying, setVerifying] = useState(true);
     const [settings, setSettings] = useState({
         meta_app_id: '',
         meta_app_secret: '',
         webhook_verify_token: '',
+        instagram_access_token: '',
     });
     const [saving, setSaving] = useState(false);
+    const [showToken, setShowToken] = useState(false);
 
+    // Load settings
     useEffect(() => {
         fetch('/api/settings')
             .then(r => r.json())
             .then(data => {
-                if (data && !data.error) setSettings(data);
+                if (data && !data.error) setSettings(prev => ({ ...prev, ...data }));
             })
             .catch(console.error);
+    }, []);
+
+    // Verify Instagram connection
+    useEffect(() => {
+        setVerifying(true);
+        fetch('/api/settings/verify')
+            .then(r => r.json())
+            .then(data => {
+                if (data.connected) {
+                    setIgProfile(data.profile);
+                } else {
+                    setIgProfile(null);
+                }
+            })
+            .catch(console.error)
+            .finally(() => setVerifying(false));
     }, []);
 
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com';
@@ -32,6 +52,13 @@ export default function SettingsPage() {
             });
             if (res.ok) {
                 alert('설정이 저장되었습니다! ✅');
+                // Re-verify Instagram connection after saving
+                const verify = await fetch('/api/settings/verify').then(r => r.json());
+                if (verify.connected) {
+                    setIgProfile(verify.profile);
+                } else {
+                    setIgProfile(null);
+                }
             } else {
                 alert('저장 실패');
             }
@@ -40,6 +67,17 @@ export default function SettingsPage() {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleDisconnect = async () => {
+        if (!confirm('정말 Instagram 연결을 해제하시겠습니까?')) return;
+        await fetch('/api/settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instagram_access_token: '' }),
+        });
+        setIgProfile(null);
+        setSettings(prev => ({ ...prev, instagram_access_token: '' }));
     };
 
     const copyToClipboard = (text) => {
@@ -58,42 +96,76 @@ export default function SettingsPage() {
             <div className="settings-section">
                 <div className="settings-section-title">📸 Instagram 계정 연결</div>
                 <div className="card">
-                    {connected ? (
+                    {verifying ? (
+                        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)' }}>
+                            ⏳ Instagram 연결 확인 중...
+                        </div>
+                    ) : igProfile ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                <div style={{
-                                    width: '52px', height: '52px', borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, var(--ig-purple), var(--ig-pink), var(--ig-orange))',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '22px', fontWeight: 700, color: 'white'
-                                }}>B</div>
+                                {igProfile.profilePicture ? (
+                                    <img
+                                        src={igProfile.profilePicture}
+                                        alt={igProfile.username}
+                                        style={{
+                                            width: '52px', height: '52px', borderRadius: '50%',
+                                            border: '2px solid var(--ig-pink)',
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={{
+                                        width: '52px', height: '52px', borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, var(--ig-purple), var(--ig-pink), var(--ig-orange))',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '22px', fontWeight: 700, color: 'white'
+                                    }}>{igProfile.username?.charAt(0).toUpperCase()}</div>
+                                )}
                                 <div>
-                                    <div style={{ fontSize: '16px', fontWeight: 600 }}>@blankerfactory</div>
+                                    <div style={{ fontSize: '16px', fontWeight: 600 }}>@{igProfile.username}</div>
                                     <div style={{ fontSize: '13px', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }}></span>
-                                        연결됨 · Business 계정
+                                        연결됨 · {igProfile.name}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                        팔로워 {igProfile.followersCount?.toLocaleString()}명 · 게시물 {igProfile.mediaCount}개
                                     </div>
                                 </div>
                             </div>
-                            <button className="btn btn-danger btn-sm" onClick={() => setConnected(false)}>연결 해제</button>
+                            <button className="btn btn-danger btn-sm" onClick={handleDisconnect}>연결 해제</button>
                         </div>
                     ) : (
                         <div className="empty-state" style={{ padding: '30px' }}>
                             <div className="empty-state-icon">📸</div>
                             <h3>Instagram 계정을 연결하세요</h3>
-                            <p>Meta OAuth를 통해 비즈니스 계정을 연결합니다.<br />먼저 아래 Meta App 설정을 완료해주세요.</p>
-                            <button className="btn btn-primary" onClick={() => {
-                                if (!settings.meta_app_id) {
-                                    alert('먼저 Meta App ID를 입력해주세요');
-                                    return;
-                                }
-                                // OAuth flow would start here
-                                setConnected(true);
-                            }}>
-                                Instagram 연결하기
-                            </button>
+                            <p>아래 Access Token 필드에 Instagram 토큰을 입력하고 저장하면 자동 연결됩니다.</p>
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Access Token */}
+            <div className="settings-section">
+                <div className="settings-section-title">🔐 Instagram Access Token</div>
+                <div className="card">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Access Token</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                                className="form-input"
+                                placeholder="Instagram Access Token을 붙여넣으세요"
+                                value={settings.instagram_access_token}
+                                onChange={e => setSettings(prev => ({ ...prev, instagram_access_token: e.target.value }))}
+                                type={showToken ? 'text' : 'password'}
+                                style={{ flex: 1 }}
+                            />
+                            <button className="btn btn-secondary btn-sm" onClick={() => setShowToken(!showToken)}>
+                                {showToken ? '🙈 숨기기' : '👁️ 보기'}
+                            </button>
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                            Meta 개발자 콘솔에서 발급받은 토큰을 입력하세요. 토큰은 60일마다 갱신이 필요합니다.
+                        </div>
+                    </div>
                 </div>
             </div>
 
