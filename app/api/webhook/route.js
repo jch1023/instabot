@@ -1,31 +1,11 @@
+
 import { NextResponse } from 'next/server';
 import { handleCommentEvent } from '@/lib/webhook-handler.js';
-import { getSetting } from '@/lib/db.js';
+import { getSetting, saveWebhookLog } from '@/lib/db.js';
 import { sendTelegramNotification, formatWebhookNotification } from '@/lib/telegram.js';
-import fs from 'fs';
-import path from 'path';
-
-// Log webhook payloads to file for debugging
-function logWebhook(body) {
-    try {
-        const logFile = path.join(process.cwd(), 'webhook-log.json');
-        let logs = [];
-        if (fs.existsSync(logFile)) {
-            try { logs = JSON.parse(fs.readFileSync(logFile, 'utf8')); } catch (e) { logs = []; }
-        }
-        logs.push({ timestamp: new Date().toISOString(), body });
-        // Keep last 50 entries
-        if (logs.length > 50) logs = logs.slice(-50);
-        fs.writeFileSync(logFile, JSON.stringify(logs, null, 2), 'utf8');
-    } catch (e) {
-        console.error('[Webhook] Log write error:', e.message);
-    }
-}
 
 /**
  * GET /api/webhook - Webhook verification (Meta challenge)
- * When you set up the webhook in Meta App Dashboard, 
- * Meta sends a GET request to verify your endpoint.
  */
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -35,6 +15,9 @@ export async function GET(request) {
     const challenge = searchParams.get('hub.challenge');
 
     const verifyToken = (await getSetting('webhook_verify_token')) || process.env.WEBHOOK_VERIFY_TOKEN || 'instabot_verify_2026';
+
+    // 검증 요청도 로그에 기록
+    await saveWebhookLog('verify', { mode, token, challenge }, mode === 'subscribe' && token === verifyToken, null);
 
     if (mode === 'subscribe' && token === verifyToken) {
         console.log('[Webhook] ✅ Verification successful');
@@ -47,47 +30,61 @@ export async function GET(request) {
 
 /**
  * POST /api/webhook - Receive Instagram webhook events
- * Instagram sends comment events here via POST
  */
 export async function POST(request) {
     try {
         const body = await request.json();
-
-        // Log raw webhook body
         console.log('[Webhook] 📩 Received:', JSON.stringify(body).slice(0, 200));
-        logWebhook(body);
 
-        // Send Telegram notification
+        // DB에 원본 로그 저장
+        let eventType = body.object || 'unknown';
+        const entries = body.entry || [];
+
+        // 이벤트 유형 파악
+        for (const entry of entries) {
+            const changes = entry.changes || [];
+            for (const change of changes) {
+                if (change.field) eventType = change.field;
+            }
+        }
+
+        // Telegram 알림
         const tgMessage = formatWebhookNotification(body);
         sendTelegramNotification(tgMessage).catch(() => { });
 
-        // Instagram sends the object type in body.object
+        // Instagram이 아니면 무시
         if (body.object !== 'instagram') {
-            console.log('[Webhook] Non-instagram object:', body.object);
+            await saveWebhookLog(eventType, body, false, 'non-instagram object');
             return NextResponse.json({ received: true });
         }
 
-        // Process each entry
-        const entries = body.entry || [];
+        // 댓글 이벤트 처리
+        let results = [];
         for (const entry of entries) {
             const changes = entry.changes || [];
             for (const change of changes) {
                 if (change.field === 'comments') {
                     const commentData = change.value;
-                    await handleCommentEvent(commentData);
+                    const result = await handleCommentEvent(commentData);
+                    results.push(result);
                 }
             }
 
-            // Also handle messaging events (for future use)
             const messaging = entry.messaging || [];
             for (const msg of messaging) {
                 console.log('[Webhook] Messaging event:', JSON.stringify(msg));
+                results.push({ type: 'messaging', data: msg });
             }
         }
+
+        // 처리 결과를 DB에 저장
+        await saveWebhookLog(eventType, body, true, results.length > 0 ? results : 'no matching handlers');
 
         return NextResponse.json({ received: true });
     } catch (error) {
         console.error('[Webhook] Error processing event:', error);
+        // 에러도 로그에 기록
+        try { await saveWebhookLog('error', { error: error.message }, false, error.message); } catch (e) { }
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }
