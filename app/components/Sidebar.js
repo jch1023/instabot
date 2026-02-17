@@ -25,6 +25,7 @@ export default function Sidebar() {
         { href: '/', label: '대시보드', icon: '📊' },
         { href: '/campaigns', label: '캠페인', icon: '🚀' },
         { href: '/logs', label: 'DM 로그', icon: '📨' },
+        { href: '/webhook-logs', label: '실시간 로그', icon: '📡' },
         { href: '/settings', label: '설정', icon: '⚙️' },
     ];
 
