@@ -165,6 +165,43 @@ export default function SettingsPage() {
                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
                             Meta 개발자 콘솔에서 발급받은 토큰을 입력하세요. 토큰은 60일마다 갱신이 필요합니다.
                         </div>
+
+                        {/* Follower Sync Button */}
+                        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>👥 팔로워 목록 동기화</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                        '팔로워 전용 DM' 기능을 위해 목록을 업데이트합니다. (최대 500명)
+                                    </div>
+                                </div>
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={async () => {
+                                        if (!confirm('팔로워 목록을 동기화하시겠습니까? 시간이 걸릴 수 있습니다.')) return;
+                                        const btn = document.getElementById('sync-btn');
+                                        if (btn) btn.innerText = '⏳ 동기화 중...';
+
+                                        try {
+                                            const res = await fetch('/api/followers/update', { method: 'POST' });
+                                            const data = await res.json();
+                                            if (res.ok) {
+                                                alert(`성공! ${data.count}명의 팔로워를 동기화했습니다.`);
+                                            } else {
+                                                throw new Error(data.error);
+                                            }
+                                        } catch (e) {
+                                            alert(`동기화 실패: ${e.message}`);
+                                        } finally {
+                                            if (btn) btn.innerText = '🔄 목록 업데이트';
+                                        }
+                                    }}
+                                    id="sync-btn"
+                                >
+                                    🔄 목록 업데이트
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
