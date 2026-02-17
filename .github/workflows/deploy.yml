@@ -41,7 +41,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/instagram-dm-bot
+          images: ${{ env.REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/instabot
           tags: type=raw,value=latest
 
       - name: Build and push Docker image
