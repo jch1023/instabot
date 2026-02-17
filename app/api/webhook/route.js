@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { handleCommentEvent } from '../../../lib/webhook-handler.js';
-import { getSetting } from '../../../lib/db.js';
-import { sendTelegramNotification, formatWebhookNotification } from '../../../lib/telegram.js';
+import { handleCommentEvent } from '@/lib/webhook-handler.js';
+import { getSetting } from '@/lib/db.js';
+import { sendTelegramNotification, formatWebhookNotification } from '@/lib/telegram.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -34,7 +34,7 @@ export async function GET(request) {
     const token = searchParams.get('hub.verify_token');
     const challenge = searchParams.get('hub.challenge');
 
-    const verifyToken = getSetting('webhook_verify_token') || process.env.WEBHOOK_VERIFY_TOKEN || 'instabot_verify_2026';
+    const verifyToken = (await getSetting('webhook_verify_token')) || process.env.WEBHOOK_VERIFY_TOKEN || 'instabot_verify_2026';
 
     if (mode === 'subscribe' && token === verifyToken) {
         console.log('[Webhook] ✅ Verification successful');

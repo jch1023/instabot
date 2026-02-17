@@ -8,7 +8,7 @@ import { getMediaComments } from '@/lib/instagram.js';
 export async function GET(request, { params }) {
     try {
         const { mediaId } = await params;
-        const accessToken = getSetting('instagram_access_token');
+        const accessToken = await getSetting('instagram_access_token');
         if (!accessToken) {
             return NextResponse.json({ error: 'No access token' }, { status: 401 });
         }

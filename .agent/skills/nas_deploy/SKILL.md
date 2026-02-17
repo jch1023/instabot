@@ -10,8 +10,9 @@ description: Deploy Docker containers to Synology NAS (GitHub -> GHCR -> NAS)
 ## 🔧 1. NAS Connection Info
 *(자주 사용하는 NAS 정보를 여기에 기록해두고 복사해서 쓰세요)*
 
-- **NAS 주소 (IP/Domain)**: `https://nas.mydomain.com` (예시)
-- **SSH 접속 명령**: `ssh admin_id@192.168.0.x`
+- **NAS 주소 (Domain)**: `justmobile.synology.me` (외부 접속용)
+- **외부 IP**: `118.32.105.92`
+- **SSH 접속 명령**: `ssh 사용자ID@justmobile.synology.me -p 22`
 - **Docker 데이터 경로**: `/volume1/docker/instagram-bot`
 
 ---

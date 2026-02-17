@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCampaignById, updateCampaign, deleteCampaign, toggleCampaign } from '../../../../lib/db.js';
+import { getCampaignById, updateCampaign, deleteCampaign, toggleCampaign } from '@/lib/db.js';
 
 /**
  * GET /api/campaigns/[id] - Get a single campaign
@@ -7,7 +7,7 @@ import { getCampaignById, updateCampaign, deleteCampaign, toggleCampaign } from 
 export async function GET(request, { params }) {
     try {
         const { id } = await params;
-        const campaign = getCampaignById(id);
+        const campaign = await getCampaignById(id);
         if (!campaign) {
             return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
         }
@@ -27,7 +27,7 @@ export async function PUT(request, { params }) {
     try {
         const { id } = await params;
         const body = await request.json();
-        const updated = updateCampaign(id, body);
+        const updated = await updateCampaign(id, body);
         return NextResponse.json({
             ...updated,
             keywords: JSON.parse(updated.keywords || '[]'),
@@ -44,7 +44,7 @@ export async function PATCH(request, { params }) {
     try {
         const { id } = await params;
         const body = await request.json();
-        toggleCampaign(id, body.is_active);
+        await toggleCampaign(id, body.is_active);
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -57,7 +57,7 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         const { id } = await params;
-        deleteCampaign(id);
+        await deleteCampaign(id);
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

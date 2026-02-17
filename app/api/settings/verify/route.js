@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getSetting, setSetting } from '../../../../lib/db.js';
-import { getMyProfile } from '../../../../lib/instagram.js';
+import { getSetting, setSetting } from '@/lib/db.js';
+import { getMyProfile } from '@/lib/instagram.js';
 
 /**
  * GET /api/settings/verify - Verify Instagram connection by testing the access token
  */
 export async function GET() {
     try {
-        const accessToken = getSetting('instagram_access_token');
+        const accessToken = await getSetting('instagram_access_token');
 
         if (!accessToken) {
             return NextResponse.json({
@@ -20,8 +20,8 @@ export async function GET() {
         const profile = await getMyProfile(accessToken);
 
         // Save IG user info to settings for later use
-        if (profile.id) setSetting('ig_user_id', profile.id);
-        if (profile.username) setSetting('ig_username', profile.username);
+        if (profile.id) await setSetting('ig_user_id', profile.id);
+        if (profile.username) await setSetting('ig_username', profile.username);
 
         return NextResponse.json({
             connected: true,

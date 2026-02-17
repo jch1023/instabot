@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getAllCampaigns, createCampaign } from '../../../lib/db.js';
+import { getAllCampaigns, createCampaign } from '@/lib/db.js';
 
 /**
  * GET /api/campaigns - List all campaigns
  */
 export async function GET() {
     try {
-        const campaigns = getAllCampaigns();
+        const campaigns = await getAllCampaigns();
         // Parse keywords JSON string back to array
         const parsed = campaigns.map(c => ({
             ...c,
@@ -30,7 +30,7 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Campaign name is required' }, { status: 400 });
         }
 
-        const campaign = createCampaign(body);
+        const campaign = await createCampaign(body);
         return NextResponse.json(campaign, { status: 201 });
     } catch (error) {
         console.error('[API] Error creating campaign:', error);

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDmLogs } from '../../../lib/db.js';
+import { getDmLogs } from '@/lib/db.js';
 
 /**
  * GET /api/logs - Get DM logs with optional filters
@@ -12,7 +12,7 @@ export async function GET(request) {
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
 
-        const logs = getDmLogs({ status, campaignId, limit, offset });
+        const logs = await getDmLogs({ status, campaignId, limit, offset });
         return NextResponse.json(logs);
     } catch (error) {
         console.error('[API] Error fetching logs:', error);
