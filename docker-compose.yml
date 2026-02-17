@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
   app:
-    # ⚠️ IMPORTANT: Replace 'username/repo-name' with your actual GitHub username and repository name
-    # e.g., image: ghcr.io/jch1023/instagram-dm-bot:latest
-    image: ghcr.io/USERNAME/REPO_NAME:latest
+    # Docker Hub 이미지: GitHub Actions가 'instabot' 이름으로 빌드함
+    image: jch1023/instabot:latest
+    container_name: instagram-dm-bot
     restart: unless-stopped
     ports:
       - "3000:3000"
