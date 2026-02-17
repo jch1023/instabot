@@ -1,19 +1,22 @@
 version: '3.8'
 
 services:
-  instabot:
-    build: .
-    container_name: instabot
+  app:
+    # ⚠️ IMPORTANT: Replace 'username/repo-name' with your actual GitHub username and repository name
+    # e.g., image: ghcr.io/jch1023/instagram-dm-bot:latest
+    image: ghcr.io/USERNAME/REPO_NAME:latest
     restart: unless-stopped
     ports:
-      - "3100:3000"
+      - "3000:3000"
     volumes:
-      # SQLite DB를 NAS 로컬에 저장 (컨테이너 삭제해도 데이터 유지)
-      - ./data:/app/db
+      # Data persistence (SQLite database)
+      - ./data:/app/data
     environment:
+      # These environment variables should match your .env.local on NAS
       - NODE_ENV=production
-      - META_APP_ID=${META_APP_ID}
-      - META_APP_SECRET=${META_APP_SECRET}
-      - INSTAGRAM_ACCESS_TOKEN=${INSTAGRAM_ACCESS_TOKEN}
-      - WEBHOOK_VERIFY_TOKEN=${WEBHOOK_VERIFY_TOKEN:-instabot_verify_2026}
-      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3100}
+      - DB_FILE=/app/data/db.sqlite
+      # ⚠️ Replace with your own domain
+      - NEXT_PUBLIC_BASE_URL=https://your-domain.com
+      # ⚠️ Add your Instagram tokens here or use .env file
+      - WEBHOOK_VERIFY_TOKEN=instabot_verify_2026
+      # - INSTAGRAM_ACCESS_TOKEN=IGAAR... (Optional, can be set in DB via UI)

@@ -19,6 +19,7 @@ export default function CampaignEditorPage() {
         dmDefault: '',
         dmFollower: '',
         dmNonFollower: '',
+        executionMode: 'polling',
     });
 
     const [activeTab, setActiveTab] = useState('default');
@@ -45,6 +46,7 @@ export default function CampaignEditorPage() {
                             dmDefault: data.dm_default || '',
                             dmFollower: data.dm_follower || '',
                             dmNonFollower: data.dm_non_follower || '',
+                            executionMode: data.execution_mode || 'polling',
                         });
                         if (data.check_follower) setActiveTab('follower');
                     }
@@ -105,6 +107,7 @@ export default function CampaignEditorPage() {
             dm_follower: campaign.dmFollower,
             dm_non_follower: campaign.dmNonFollower,
             is_active: campaign.isActive,
+            execution_mode: campaign.executionMode,
         };
 
         try {

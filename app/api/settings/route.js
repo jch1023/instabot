@@ -13,6 +13,8 @@ export async function GET() {
             instagram_access_token: getSetting('instagram_access_token') ? '••••••••' : '',
             ig_user_id: getSetting('ig_user_id') || '',
             ig_username: getSetting('ig_username') || '',
+            telegram_bot_token: getSetting('telegram_bot_token') ? '••••••••' : '',
+            telegram_chat_id: getSetting('telegram_chat_id') || '',
         };
         return NextResponse.json(settings);
     } catch (error) {
@@ -30,6 +32,7 @@ export async function PUT(request) {
         const allowedKeys = [
             'webhook_verify_token', 'meta_app_id', 'meta_app_secret',
             'instagram_access_token', 'ig_user_id', 'ig_username',
+            'telegram_bot_token', 'telegram_chat_id',
         ];
 
         for (const [key, value] of Object.entries(body)) {

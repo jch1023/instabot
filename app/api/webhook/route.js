@@ -1,6 +1,26 @@
 import { NextResponse } from 'next/server';
 import { handleCommentEvent } from '../../../lib/webhook-handler.js';
 import { getSetting } from '../../../lib/db.js';
+import { sendTelegramNotification, formatWebhookNotification } from '../../../lib/telegram.js';
+import fs from 'fs';
+import path from 'path';
+
+// Log webhook payloads to file for debugging
+function logWebhook(body) {
+    try {
+        const logFile = path.join(process.cwd(), 'webhook-log.json');
+        let logs = [];
+        if (fs.existsSync(logFile)) {
+            try { logs = JSON.parse(fs.readFileSync(logFile, 'utf8')); } catch (e) { logs = []; }
+        }
+        logs.push({ timestamp: new Date().toISOString(), body });
+        // Keep last 50 entries
+        if (logs.length > 50) logs = logs.slice(-50);
+        fs.writeFileSync(logFile, JSON.stringify(logs, null, 2), 'utf8');
+    } catch (e) {
+        console.error('[Webhook] Log write error:', e.message);
+    }
+}
 
 /**
  * GET /api/webhook - Webhook verification (Meta challenge)
@@ -33,8 +53,17 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
+        // Log raw webhook body
+        console.log('[Webhook] 📩 Received:', JSON.stringify(body).slice(0, 200));
+        logWebhook(body);
+
+        // Send Telegram notification
+        const tgMessage = formatWebhookNotification(body);
+        sendTelegramNotification(tgMessage).catch(() => { });
+
         // Instagram sends the object type in body.object
         if (body.object !== 'instagram') {
+            console.log('[Webhook] Non-instagram object:', body.object);
             return NextResponse.json({ received: true });
         }
 
