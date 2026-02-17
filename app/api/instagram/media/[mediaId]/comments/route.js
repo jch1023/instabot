@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSetting } from '../../../../../lib/db.js';
-import { getMediaComments } from '../../../../../lib/instagram.js';
+import { getSetting } from '@/lib/db.js';
+import { getMediaComments } from '@/lib/instagram.js';
 
 /**
  * GET /api/instagram/media/[mediaId]/comments - Fetch comments on a specific post
