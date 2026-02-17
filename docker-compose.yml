@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   app:
-    # Docker Hub 이미지: GitHub Actions가 'instabot' 이름으로 빌드함
-    image: jch1023/instabot:latest
+    # GitHub Container Registry (ghcr.io) - Public Repo라 로그인 불필요!
+    image: ghcr.io/jch1023/instabot:latest
     container_name: instagram-dm-bot
     restart: unless-stopped
     ports:
