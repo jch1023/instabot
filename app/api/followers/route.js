@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db.js'; // 공통 DB 연결 사용
+import { sql } from '@vercel/postgres'; // 직접 가져오기
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
