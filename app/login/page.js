@@ -9,14 +9,25 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const router = useRouter();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // 간단한 클라이언트 사이드 인증 (쿠키 설정)
-        if (username === 'jch1023' && password === 'j1023') {
-            document.cookie = 'auth=true; path=/; max-age=86400'; // 1일 유지
-            router.push('/');
-        } else {
-            setError('아이디 또는 비밀번호가 잘못되었습니다.');
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (res.ok) {
+                // 성공 시 페이지 이동 (서버가 쿠키를 심어줌)
+                router.push('/');
+                router.refresh();
+            } else {
+                const data = await res.json();
+                setError(data.error || '로그인 실패');
+            }
+        } catch (err) {
+            setError('서버 통신 오류');
         }
     };
 
