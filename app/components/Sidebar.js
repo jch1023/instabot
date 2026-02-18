@@ -25,7 +25,7 @@ export default function Sidebar() {
                 <Link href="/" className="sidebar-logo">
                     <span style={{ fontSize: '24px', marginRight: '8px' }}>🤖</span>
                     <div>
-                        <div style={{ fontWeight: 800, fontSize: '18px', lineHeight: 1 }}>InstaBot</div>
+                        <div style={{ fontWeight: 800, fontSize: '18px', lineHeight: 1 }}>BLANKER BOT</div>
                         <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>DM Automation</div>
                     </div>
                 </Link>

@@ -2,7 +2,7 @@ import './globals.css';
 import Sidebar from './components/Sidebar';
 
 export const metadata = {
-  title: 'InstaBot - Instagram DM Automation',
+  title: 'BLANKER BOT - Instagram DM Automation',
   description: '인스타그램 댓글 자동 DM 발송 서비스',
 };
 

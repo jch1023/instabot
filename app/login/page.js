@@ -26,53 +26,86 @@ export default function LoginPage() {
                 const data = await res.json();
                 setError(data.error || '로그인 실패');
             }
-        } catch (err) {
+        } catch {
             setError('서버 통신 오류');
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-                <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">관리자 로그인</h1>
+        <div className="login-shell">
+            <div className="login-orb login-orb-left" />
+            <div className="login-orb login-orb-right" />
 
-                {error && (
-                    <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
-                        {error}
+            <div className="login-stage">
+                <section className="login-hero">
+                    <div className="login-brand">
+                        <div className="login-brand-mark">BB</div>
+                        <div>
+                            <div className="login-brand-name">BLANKER BOT</div>
+                            <div className="login-brand-subtitle">Instagram DM Automation Console</div>
+                        </div>
                     </div>
-                )}
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">아이디</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            placeholder="admin"
-                            required
-                        />
+                    <h1 className="login-hero-title">댓글 반응을 빠르게 매출 전환으로 연결하세요</h1>
+                    <p className="login-hero-copy">
+                        팔로워 구분, CTA 트리거, 캠페인 로그까지 한 화면에서 관리하는 BLANKER BOT 운영 콘솔입니다.
+                    </p>
+
+                    <div className="login-feature-list">
+                        <div className="login-feature-item">
+                            <span>⚡</span>
+                            <p>실시간 댓글 감지와 DM 자동 발송</p>
+                        </div>
+                        <div className="login-feature-item">
+                            <span>🎯</span>
+                            <p>팔로워/비팔로워 분기 메시지와 CTA 관리</p>
+                        </div>
+                        <div className="login-feature-item">
+                            <span>📈</span>
+                            <p>성과 로그 기반 캠페인 최적화</p>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+                </section>
+
+                <section className="login-card">
+                    <div className="login-card-header">
+                        <h2>관리자 로그인</h2>
+                        <p>BLANKER BOT 대시보드에 접근하려면 계정 정보를 입력하세요.</p>
+                    </div>
+
+                    {error && <div className="login-error">{error}</div>}
+
+                    <form onSubmit={handleLogin} className="login-form">
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">아이디</label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="form-input login-input"
+                                placeholder="admin"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">비밀번호</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                className="form-input login-input"
                             placeholder="••••••"
                             required
                         />
+                        </div>
+
+                        <button type="submit" className="btn btn-primary login-submit-btn">
+                            로그인
+                        </button>
+                    </form>
+                </section>
                     </div>
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition font-medium"
-                    >
-                        로그인
-                    </button>
-                </form>
-            </div>
         </div>
     );
 }
