@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { getSetting } from '@/lib/db.js';
-import { getUserProfile } from '@/lib/instagram.js';
+import { checkUserFollowStatus } from '@/lib/instagram.js';
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -17,13 +17,14 @@ export async function GET(request) {
             return NextResponse.json({ error: 'No access token found' }, { status: 500 });
         }
 
-        const profile = await getUserProfile(accessToken, userId);
+        const result = await checkUserFollowStatus(accessToken, userId);
+        const profile = result.profile || {};
 
         return NextResponse.json({
             success: true,
             userId,
-            is_user_follow_business: profile.is_user_follow_business,
-            is_business_follow_user: profile.is_business_follow_user,
+            is_user_follow_business: result.isFollower,
+            is_business_follow_user: profile.is_business_follow_user ?? null,
             full_profile: profile
         });
 

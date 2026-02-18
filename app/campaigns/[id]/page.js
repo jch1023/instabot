@@ -19,6 +19,9 @@ export default function CampaignEditorPage() {
         dmDefault: '',
         dmFollower: '',
         dmNonFollower: '',
+        ctaEnabled: true,
+        ctaButtonText: '팔로우 했어요',
+        ctaPayload: 'FOLLOW_RECHECK',
         executionMode: 'polling',
     });
 
@@ -46,6 +49,9 @@ export default function CampaignEditorPage() {
                             dmDefault: data.dm_default || '',
                             dmFollower: data.dm_follower || '',
                             dmNonFollower: data.dm_non_follower || '',
+                            ctaEnabled: data.cta_enabled !== 0,
+                            ctaButtonText: data.cta_button_text || '팔로우 했어요',
+                            ctaPayload: data.cta_payload || 'FOLLOW_RECHECK',
                             executionMode: data.execution_mode || 'polling',
                         });
                         if (data.check_follower) setActiveTab('follower');
@@ -106,6 +112,9 @@ export default function CampaignEditorPage() {
             dm_default: campaign.dmDefault,
             dm_follower: campaign.dmFollower,
             dm_non_follower: campaign.dmNonFollower,
+            cta_enabled: campaign.ctaEnabled,
+            cta_button_text: campaign.ctaButtonText,
+            cta_payload: campaign.ctaPayload,
             is_active: campaign.isActive,
             execution_mode: campaign.executionMode,
         };
@@ -341,7 +350,7 @@ export default function CampaignEditorPage() {
 
                         {campaign.checkFollower && (
                             <div className="animate-fade-in" style={{ marginTop: '12px', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                💡 <strong>팔로우 체크 방식:</strong> Instagram Followers Edge API를 사용하여 팔로워 목록을 주기적으로 동기화합니다. 팔로워에게는 특별 혜택 메시지, 비팔로워에게는 팔로우 유도 메시지를 보낼 수 있습니다.
+                                💡 <strong>팔로우 체크 방식:</strong> 댓글 시점에는 비팔로워/미확인 DM(+CTA 버튼)을 보내고, 사용자가 CTA를 누르면 팔로워 여부를 다시 확인해 후속 DM을 전송합니다.
                             </div>
                         )}
                     </div>
@@ -377,9 +386,52 @@ export default function CampaignEditorPage() {
                                 rows={6}
                             />
                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
-                                사용 가능한 변수: {'{username}'} = 댓글 작성자 ID, {'{comment}'} = 댓글 내용
+                                사용 가능한 변수: {'{username}'} = 댓글 작성자 username, {'{comment}'} = 댓글 내용
                             </div>
                         </div>
+
+                        {campaign.checkFollower && (
+                            <div className="animate-fade-in" style={{ marginTop: '14px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px' }}>CTA 버튼 설정</div>
+
+                                <div className="toggle-wrapper" style={{ marginBottom: '12px', padding: '10px 12px' }}>
+                                    <div className="toggle-info">
+                                        <div className="toggle-title">CTA 버튼 첨부</div>
+                                        <div className="toggle-desc">비팔로워/미확인 DM 하단에 Quick Reply 버튼을 자동 첨부합니다</div>
+                                    </div>
+                                    <label className="toggle">
+                                        <input
+                                            type="checkbox"
+                                            checked={campaign.ctaEnabled}
+                                            onChange={e => updateField('ctaEnabled', e.target.checked)}
+                                        />
+                                        <span className="toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">버튼 텍스트</label>
+                                        <input
+                                            className="form-input"
+                                            maxLength={20}
+                                            value={campaign.ctaButtonText}
+                                            onChange={e => updateField('ctaButtonText', e.target.value)}
+                                            placeholder="팔로우 했어요"
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Payload</label>
+                                        <input
+                                            className="form-input"
+                                            value={campaign.ctaPayload}
+                                            onChange={e => updateField('ctaPayload', e.target.value)}
+                                            placeholder="FOLLOW_RECHECK"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -401,6 +453,20 @@ export default function CampaignEditorPage() {
                             <div className="dm-bubble">
                                 {getCurrentDmText() || '메시지를 입력하면 여기에 미리보기가 표시됩니다'}
                             </div>
+                            {campaign.checkFollower && campaign.ctaEnabled && activeTab !== 'follower' && (
+                                <div style={{
+                                    marginTop: '8px',
+                                    display: 'inline-block',
+                                    fontSize: '12px',
+                                    padding: '7px 10px',
+                                    borderRadius: '999px',
+                                    border: '1px solid var(--primary)',
+                                    color: 'var(--primary-light)',
+                                    background: 'rgba(59,130,246,0.08)'
+                                }}>
+                                    {campaign.ctaButtonText || '팔로우 했어요'}
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ marginTop: '16px', padding: '14px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
@@ -413,6 +479,7 @@ export default function CampaignEditorPage() {
                                     <>
                                         <div>• 팔로워 DM: {campaign.dmFollower ? '✅ 설정됨' : '⚠️ 미설정'}</div>
                                         <div>• 비팔로워 DM: {campaign.dmNonFollower ? '✅ 설정됨' : '⚠️ 미설정'}</div>
+                                        <div>• CTA 버튼: {campaign.ctaEnabled ? `✅ ${campaign.ctaButtonText || '팔로우 했어요'}` : '❌ 사용 안 함'}</div>
                                     </>
                                 ) : (
                                     <div>• 기본 DM: {campaign.dmDefault ? '✅ 설정됨' : '⚠️ 미설정'}</div>

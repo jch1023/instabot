@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { handleCommentEvent } from '@/lib/webhook-handler.js';
+import { handleCommentEvent, handleMessagingEvent } from '@/lib/webhook-handler.js';
 import { getSetting, saveWebhookLog } from '@/lib/db.js';
 import { sendTelegramNotification, formatWebhookNotification } from '@/lib/telegram.js';
 
@@ -49,6 +49,8 @@ export async function POST(request) {
                         eventType = '✅ DM 발송 (Echo)';
                     } else if (msg.message) {
                         eventType = '📩 DM 수신';
+                        const result = await handleMessagingEvent(msg);
+                        processingResults.push({ type: 'messaging_follow_sync', result });
                     } else {
                         eventType = 'Messaging (Other)';
                     }
