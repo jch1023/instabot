@@ -1,3 +1,4 @@
+
 node_modules/
 .next/
 db/
@@ -7,3 +8,4 @@ data/
 .env.production
 tunnel.log
 *.db
+test-follower-check.js

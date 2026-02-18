@@ -57,11 +57,11 @@ export default function CampaignEditorPage() {
                             ctaFollowerEnabled: data.cta_follower_enabled === 1,
                             ctaFollowerButtonText: data.cta_follower_button_text || '팔로워 확인했어요',
                             ctaFollowerPayload: data.cta_follower_payload || 'FOLLOWER_RECHECK',
-                            ctaFollowerPrompt: data.cta_follower_prompt || '아래 버튼을 눌러 진행해주세요.',
+                            ctaFollowerPrompt: data.cta_follower_prompt ?? '아래 버튼을 눌러 진행해주세요.',
                             ctaNonFollowerEnabled: data.cta_non_follower_enabled !== 0,
                             ctaNonFollowerButtonText: data.cta_non_follower_button_text || '팔로우 했어요',
                             ctaNonFollowerPayload: data.cta_non_follower_payload || 'FOLLOW_RECHECK',
-                            ctaNonFollowerPrompt: data.cta_non_follower_prompt || '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
+                            ctaNonFollowerPrompt: data.cta_non_follower_prompt ?? '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
                             executionMode: data.execution_mode || 'polling',
                         });
                         if (data.check_follower) setActiveTab('follower');
