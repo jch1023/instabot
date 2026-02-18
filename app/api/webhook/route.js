@@ -51,6 +51,10 @@ export async function POST(request) {
                         eventType = '📩 DM 수신';
                         const result = await handleMessagingEvent(msg);
                         processingResults.push({ type: 'messaging_follow_sync', result });
+                    } else if (msg.postback) {
+                        eventType = '🔘 CTA 클릭';
+                        const result = await handleMessagingEvent(msg);
+                        processingResults.push({ type: 'messaging_follow_sync', result });
                     } else {
                         eventType = 'Messaging (Other)';
                     }
