@@ -22,9 +22,11 @@ export default function CampaignEditorPage() {
         ctaFollowerEnabled: false,
         ctaFollowerButtonText: '팔로워 확인했어요',
         ctaFollowerPayload: 'FOLLOWER_RECHECK',
+        ctaFollowerPrompt: '아래 버튼을 눌러 진행해주세요.',
         ctaNonFollowerEnabled: true,
         ctaNonFollowerButtonText: '팔로우 했어요',
         ctaNonFollowerPayload: 'FOLLOW_RECHECK',
+        ctaNonFollowerPrompt: '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
         executionMode: 'polling',
     });
 
@@ -55,9 +57,11 @@ export default function CampaignEditorPage() {
                             ctaFollowerEnabled: data.cta_follower_enabled === 1,
                             ctaFollowerButtonText: data.cta_follower_button_text || '팔로워 확인했어요',
                             ctaFollowerPayload: data.cta_follower_payload || 'FOLLOWER_RECHECK',
+                            ctaFollowerPrompt: data.cta_follower_prompt || '아래 버튼을 눌러 진행해주세요.',
                             ctaNonFollowerEnabled: data.cta_non_follower_enabled !== 0,
                             ctaNonFollowerButtonText: data.cta_non_follower_button_text || '팔로우 했어요',
                             ctaNonFollowerPayload: data.cta_non_follower_payload || 'FOLLOW_RECHECK',
+                            ctaNonFollowerPrompt: data.cta_non_follower_prompt || '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
                             executionMode: data.execution_mode || 'polling',
                         });
                         if (data.check_follower) setActiveTab('follower');
@@ -121,9 +125,11 @@ export default function CampaignEditorPage() {
             cta_follower_enabled: campaign.ctaFollowerEnabled,
             cta_follower_button_text: campaign.ctaFollowerButtonText,
             cta_follower_payload: campaign.ctaFollowerPayload,
+            cta_follower_prompt: campaign.ctaFollowerPrompt,
             cta_non_follower_enabled: campaign.ctaNonFollowerEnabled,
             cta_non_follower_button_text: campaign.ctaNonFollowerButtonText,
             cta_non_follower_payload: campaign.ctaNonFollowerPayload,
+            cta_non_follower_prompt: campaign.ctaNonFollowerPrompt,
             is_active: campaign.isActive,
             execution_mode: campaign.executionMode,
         };
@@ -451,6 +457,18 @@ export default function CampaignEditorPage() {
                                             placeholder="FOLLOW_RECHECK 또는 https://..."
                                         />
                                     </div>
+                                </div>
+                                <div className="form-group" style={{ marginTop: '10px', marginBottom: 0 }}>
+                                    <label className="form-label">CTA 안내 문구</label>
+                                    <input
+                                        className="form-input"
+                                        value={activeTab === 'follower' ? campaign.ctaFollowerPrompt : campaign.ctaNonFollowerPrompt}
+                                        onChange={e => {
+                                            if (activeTab === 'follower') updateField('ctaFollowerPrompt', e.target.value);
+                                            else updateField('ctaNonFollowerPrompt', e.target.value);
+                                        }}
+                                        placeholder="아래 버튼을 눌러 진행해주세요."
+                                    />
                                 </div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
                                     URL을 넣으면 링크 버튼으로 전송되고, 일반 텍스트를 넣으면 DM 재확인용 Payload로 처리됩니다.
