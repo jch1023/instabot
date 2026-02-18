@@ -19,9 +19,12 @@ export default function CampaignEditorPage() {
         dmDefault: '',
         dmFollower: '',
         dmNonFollower: '',
-        ctaEnabled: true,
-        ctaButtonText: '팔로우 했어요',
-        ctaPayload: 'FOLLOW_RECHECK',
+        ctaFollowerEnabled: false,
+        ctaFollowerButtonText: '팔로워 확인했어요',
+        ctaFollowerPayload: 'FOLLOWER_RECHECK',
+        ctaNonFollowerEnabled: true,
+        ctaNonFollowerButtonText: '팔로우 했어요',
+        ctaNonFollowerPayload: 'FOLLOW_RECHECK',
         executionMode: 'polling',
     });
 
@@ -49,9 +52,12 @@ export default function CampaignEditorPage() {
                             dmDefault: data.dm_default || '',
                             dmFollower: data.dm_follower || '',
                             dmNonFollower: data.dm_non_follower || '',
-                            ctaEnabled: data.cta_enabled !== 0,
-                            ctaButtonText: data.cta_button_text || '팔로우 했어요',
-                            ctaPayload: data.cta_payload || 'FOLLOW_RECHECK',
+                            ctaFollowerEnabled: data.cta_follower_enabled === 1,
+                            ctaFollowerButtonText: data.cta_follower_button_text || '팔로워 확인했어요',
+                            ctaFollowerPayload: data.cta_follower_payload || 'FOLLOWER_RECHECK',
+                            ctaNonFollowerEnabled: data.cta_non_follower_enabled !== 0,
+                            ctaNonFollowerButtonText: data.cta_non_follower_button_text || '팔로우 했어요',
+                            ctaNonFollowerPayload: data.cta_non_follower_payload || 'FOLLOW_RECHECK',
                             executionMode: data.execution_mode || 'polling',
                         });
                         if (data.check_follower) setActiveTab('follower');
@@ -112,9 +118,12 @@ export default function CampaignEditorPage() {
             dm_default: campaign.dmDefault,
             dm_follower: campaign.dmFollower,
             dm_non_follower: campaign.dmNonFollower,
-            cta_enabled: campaign.ctaEnabled,
-            cta_button_text: campaign.ctaButtonText,
-            cta_payload: campaign.ctaPayload,
+            cta_follower_enabled: campaign.ctaFollowerEnabled,
+            cta_follower_button_text: campaign.ctaFollowerButtonText,
+            cta_follower_payload: campaign.ctaFollowerPayload,
+            cta_non_follower_enabled: campaign.ctaNonFollowerEnabled,
+            cta_non_follower_button_text: campaign.ctaNonFollowerButtonText,
+            cta_non_follower_payload: campaign.ctaNonFollowerPayload,
             is_active: campaign.isActive,
             execution_mode: campaign.executionMode,
         };
@@ -397,13 +406,20 @@ export default function CampaignEditorPage() {
                                 <div className="toggle-wrapper" style={{ marginBottom: '12px', padding: '10px 12px' }}>
                                     <div className="toggle-info">
                                         <div className="toggle-title">CTA 버튼 첨부</div>
-                                        <div className="toggle-desc">비팔로워/미확인 DM 하단에 Quick Reply 버튼을 자동 첨부합니다</div>
+                                        <div className="toggle-desc">
+                                            {activeTab === 'follower'
+                                                ? '팔로워용 DM에 CTA 트리거 문구를 추가합니다'
+                                                : '비팔로워용 DM에 CTA 트리거 문구를 추가합니다'}
+                                        </div>
                                     </div>
                                     <label className="toggle">
                                         <input
                                             type="checkbox"
-                                            checked={campaign.ctaEnabled}
-                                            onChange={e => updateField('ctaEnabled', e.target.checked)}
+                                            checked={activeTab === 'follower' ? campaign.ctaFollowerEnabled : campaign.ctaNonFollowerEnabled}
+                                            onChange={e => {
+                                                if (activeTab === 'follower') updateField('ctaFollowerEnabled', e.target.checked);
+                                                else updateField('ctaNonFollowerEnabled', e.target.checked);
+                                            }}
                                         />
                                         <span className="toggle-slider"></span>
                                     </label>
@@ -415,8 +431,11 @@ export default function CampaignEditorPage() {
                                         <input
                                             className="form-input"
                                             maxLength={20}
-                                            value={campaign.ctaButtonText}
-                                            onChange={e => updateField('ctaButtonText', e.target.value)}
+                                            value={activeTab === 'follower' ? campaign.ctaFollowerButtonText : campaign.ctaNonFollowerButtonText}
+                                            onChange={e => {
+                                                if (activeTab === 'follower') updateField('ctaFollowerButtonText', e.target.value);
+                                                else updateField('ctaNonFollowerButtonText', e.target.value);
+                                            }}
                                             placeholder="팔로우 했어요"
                                         />
                                     </div>
@@ -424,8 +443,11 @@ export default function CampaignEditorPage() {
                                         <label className="form-label">Payload</label>
                                         <input
                                             className="form-input"
-                                            value={campaign.ctaPayload}
-                                            onChange={e => updateField('ctaPayload', e.target.value)}
+                                            value={activeTab === 'follower' ? campaign.ctaFollowerPayload : campaign.ctaNonFollowerPayload}
+                                            onChange={e => {
+                                                if (activeTab === 'follower') updateField('ctaFollowerPayload', e.target.value);
+                                                else updateField('ctaNonFollowerPayload', e.target.value);
+                                            }}
                                             placeholder="FOLLOW_RECHECK"
                                         />
                                     </div>
@@ -453,7 +475,10 @@ export default function CampaignEditorPage() {
                             <div className="dm-bubble">
                                 {getCurrentDmText() || '메시지를 입력하면 여기에 미리보기가 표시됩니다'}
                             </div>
-                            {campaign.checkFollower && campaign.ctaEnabled && activeTab !== 'follower' && (
+                            {campaign.checkFollower && (
+                                ((activeTab === 'follower' && campaign.ctaFollowerEnabled) ||
+                                    (activeTab !== 'follower' && campaign.ctaNonFollowerEnabled))
+                            ) && (
                                 <div style={{
                                     marginTop: '8px',
                                     display: 'inline-block',
@@ -464,7 +489,9 @@ export default function CampaignEditorPage() {
                                     color: 'var(--primary-light)',
                                     background: 'rgba(59,130,246,0.08)'
                                 }}>
-                                    {campaign.ctaButtonText || '팔로우 했어요'}
+                                    {activeTab === 'follower'
+                                        ? (campaign.ctaFollowerButtonText || '팔로워 확인했어요')
+                                        : (campaign.ctaNonFollowerButtonText || '팔로우 했어요')}
                                 </div>
                             )}
                         </div>
@@ -479,7 +506,8 @@ export default function CampaignEditorPage() {
                                     <>
                                         <div>• 팔로워 DM: {campaign.dmFollower ? '✅ 설정됨' : '⚠️ 미설정'}</div>
                                         <div>• 비팔로워 DM: {campaign.dmNonFollower ? '✅ 설정됨' : '⚠️ 미설정'}</div>
-                                        <div>• CTA 버튼: {campaign.ctaEnabled ? `✅ ${campaign.ctaButtonText || '팔로우 했어요'}` : '❌ 사용 안 함'}</div>
+                                        <div>• 팔로워 CTA: {campaign.ctaFollowerEnabled ? `✅ ${campaign.ctaFollowerButtonText || '팔로워 확인했어요'}` : '❌ 사용 안 함'}</div>
+                                        <div>• 비팔로워 CTA: {campaign.ctaNonFollowerEnabled ? `✅ ${campaign.ctaNonFollowerButtonText || '팔로우 했어요'}` : '❌ 사용 안 함'}</div>
                                     </>
                                 ) : (
                                     <div>• 기본 DM: {campaign.dmDefault ? '✅ 설정됨' : '⚠️ 미설정'}</div>
