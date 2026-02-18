@@ -33,118 +33,85 @@ export default function FollowersPage() {
     }, [page]);
 
     const handleSync = async () => {
-        if (!confirm('팔로워 목록 동기화를 시작하시겠습니까? (시간이 다소 소요될 수 있습니다.)')) return;
+        // [중요] 인스타그램 정책상 팔로워 전체 목록 조회는 불가능함.
+        // 따라서 이 버튼은 '안내 메시지'를 띄우는 용도로 변경하거나,
+        // 정말로 가능한 방법(없음)을 시도하다 에러만 낼 뿐임.
+        // 사용자에게 명확히 고지하는 것이 최선.
 
-        setSyncing(true);
-        setSyncProgress('동기화 시작 중...');
-        let nextCursor = null;
-        let totalSynced = 0;
-        let keepGoing = true;
-        let limit = 0;
-        const MAX_PAGES = 50; // 안전 장치: 최대 50페이지(약 5000명)까지만
-
-        try {
-            while (keepGoing && limit < MAX_PAGES) {
-                const res = await fetch('/api/followers/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ after: nextCursor })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    totalSynced += data.count;
-                    nextCursor = data.next_cursor;
-                    setSyncProgress(`${totalSynced}명 저장 완료... (진행 중)`);
-
-                    if (!nextCursor) {
-                        keepGoing = false;
-                    }
-                    limit++;
-                } else {
-                    alert('동기화 중 오류 발생: ' + data.error);
-                    keepGoing = false;
-                }
-            }
-
-            setSyncProgress(`✅ 동기화 완료! 총 ${totalSynced}명 저장됨.`);
-            fetchFollowers(1); // 목록 갱신
-
-        } catch (e) {
-            alert('동기화 실패: ' + e.message);
-        } finally {
-            setSyncing(false);
-            setTimeout(() => setSyncProgress(''), 5000);
-        }
+        alert("⚠️ Instagram 공식 API 제약사항\n\n현재 인스타그램은 '팔로워 전체 목록' 조회 기능을 제공하지 않습니다.\n(과거에는 가능했으나 개인정보 정책 강화로 막힘)\n\n대신, '댓글'이나 'DM' 등 상호작용이 발생하는 순간\n자동으로 이곳에 유저 정보가 등록됩니다.\n\n즉, 활동하는 '진성 팔로워' 위주로 목록이 채워집니다.");
     };
 
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-white">👥 팔로워 목록 관리</h1>
+        <div className="animate-fade-in">
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h2>팔로워 목록 관리</h2>
+                    <p>봇이 감지한 활동 유저(팔로워) 목록입니다.</p>
+                </div>
                 <button
                     onClick={handleSync}
-                    disabled={syncing}
-                    className={`px-4 py-2 rounded font-bold transition ${syncing ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'} text-white`}
+                    className="btn btn-primary"
                 >
-                    {syncing ? '🔄 동기화 중...' : '🔄 전체 동기화 시작'}
+                    ℹ️ 동기화 도움말
                 </button>
             </div>
 
-            {syncProgress && (
-                <div className="mb-4 p-3 bg-blue-900/50 border border-blue-500 rounded text-blue-200">
-                    INFO: {syncProgress}
+            <div className="card">
+                <div style={{ overflowX: 'auto' }}>
+                    <table className="log-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr>
+                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid var(--border)' }}>ID</th>
+                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid var(--border)' }}>Username</th>
+                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid var(--border)' }}>최초 감지일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan="3" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Loading...</td></tr>
+                            ) : followers.length === 0 ? (
+                                <tr><td colSpan="3" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                    <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
+                                    아직 감지된 유저가 없습니다.<br />
+                                    댓글 이벤트가 발생하면 자동으로 추가됩니다.
+                                </td></tr>
+                            ) : (
+                                followers.map(f => (
+                                    <tr key={f.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                        <td style={{ padding: '12px', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{f.ig_user_id}</td>
+                                        <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--primary-light)' }}>@{f.ig_username}</td>
+                                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
+                                            {new Date(f.cached_at).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            )}
 
-            <div className="bg-gray-800 rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left text-gray-300">
-                    <thead className="bg-gray-700 text-gray-100">
-                        <tr>
-                            <th className="p-4">ID</th>
-                            <th className="p-4">Username</th>
-                            <th className="p-4">저장된 시간</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan="3" className="p-8 text-center text-gray-400">Loading...</td></tr>
-                        ) : followers.length === 0 ? (
-                            <tr><td colSpan="3" className="p-8 text-center text-gray-400">데이터가 없습니다. 동기화를 실행해주세요.</td></tr>
-                        ) : (
-                            followers.map(f => (
-                                <tr key={f.id} className="border-t border-gray-700 hover:bg-gray-750">
-                                    <td className="p-4 text-gray-400 font-mono text-sm">{f.ig_user_id}</td>
-                                    <td className="p-4 font-bold text-blue-400">@{f.ig_username}</td>
-                                    <td className="p-4 text-gray-400 text-sm">
-                                        {new Date(f.cached_at).toLocaleString()}
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="mt-4 flex justify-between items-center text-gray-400 text-sm">
-                <div>Total: {total}명</div>
-                <div className="space-x-2">
-                    <button
-                        disabled={page === 1}
-                        onClick={() => setPage(p => p - 1)}
-                        className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 text-white"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-gray-300">Page {page}</span>
-                    <button
-                        disabled={followers.length < PER_PAGE}
-                        onClick={() => setPage(p => p + 1)}
-                        className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 text-white"
-                    >
-                        Next
-                    </button>
+                {/* Pagination */}
+                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                    <div>Total: {total}명</div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(p => p - 1)}
+                            className="btn btn-ghost btn-sm"
+                            style={{ opacity: page === 1 ? 0.5 : 1 }}
+                        >
+                            Previous
+                        </button>
+                        <span style={{ display: 'flex', alignItems: 'center' }}>Page {page}</span>
+                        <button
+                            disabled={followers.length < PER_PAGE}
+                            onClick={() => setPage(p => p + 1)}
+                            className="btn btn-ghost btn-sm"
+                            style={{ opacity: followers.length < PER_PAGE ? 0.5 : 1 }}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
