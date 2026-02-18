@@ -440,7 +440,7 @@ export default function CampaignEditorPage() {
                                         />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label">Payload</label>
+                                        <label className="form-label">Payload / URL</label>
                                         <input
                                             className="form-input"
                                             value={activeTab === 'follower' ? campaign.ctaFollowerPayload : campaign.ctaNonFollowerPayload}
@@ -448,9 +448,12 @@ export default function CampaignEditorPage() {
                                                 if (activeTab === 'follower') updateField('ctaFollowerPayload', e.target.value);
                                                 else updateField('ctaNonFollowerPayload', e.target.value);
                                             }}
-                                            placeholder="FOLLOW_RECHECK"
+                                            placeholder="FOLLOW_RECHECK 또는 https://..."
                                         />
                                     </div>
+                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                                    URL을 넣으면 링크 버튼으로 전송되고, 일반 텍스트를 넣으면 DM 재확인용 Payload로 처리됩니다.
                                 </div>
                             </div>
                         )}
