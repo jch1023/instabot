@@ -13,9 +13,7 @@ export default function Sidebar() {
     const menuItems = [
         { name: '대시보드', path: '/', icon: <span className="nav-icon">📊</span> },
         { name: '캠페인 관리', path: '/campaigns', icon: <span className="nav-icon">🚀</span> },
-        { name: '개별 DM 발송', path: '/manual-dm', icon: <span className="nav-icon">📨</span> },
         { name: '실시간 로그', path: '/webhook-logs', icon: <span className="nav-icon">📡</span> },
-        { name: '팔로워 목록', path: '/followers', icon: <span className="nav-icon">👥</span> },
         { name: '설정', path: '/settings', icon: <span className="nav-icon">⚙️</span> },
     ];
 
