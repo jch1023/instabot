@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 export default function CampaignEditorPage() {
     const params = useParams();
     const router = useRouter();
-    const isNew = params.id === 'new';
+    const [campaignId, setCampaignId] = useState(() => params.id);
+    const isNew = campaignId === 'new';
 
     const [campaign, setCampaign] = useState({
         name: '',
@@ -37,7 +38,7 @@ export default function CampaignEditorPage() {
 
     // Load campaign data (if editing)
     useEffect(() => {
-        if (!isNew) {
+        if (params.id !== 'new') {
             fetch(`/api/campaigns/${params.id}`)
                 .then(r => r.json())
                 .then(data => {
@@ -55,11 +56,11 @@ export default function CampaignEditorPage() {
                             dmFollower: data.dm_follower || '',
                             dmNonFollower: data.dm_non_follower || '',
                             ctaFollowerEnabled: data.cta_follower_enabled === 1,
-                            ctaFollowerButtonText: data.cta_follower_button_text || '팔로워 확인했어요',
+                            ctaFollowerButtonText: data.cta_follower_button_text ?? '팔로워 확인했어요',
                             ctaFollowerPayload: data.cta_follower_payload || 'FOLLOWER_RECHECK',
                             ctaFollowerPrompt: data.cta_follower_prompt ?? '아래 버튼을 눌러 진행해주세요.',
                             ctaNonFollowerEnabled: data.cta_non_follower_enabled !== 0,
-                            ctaNonFollowerButtonText: data.cta_non_follower_button_text || '팔로우 했어요',
+                            ctaNonFollowerButtonText: data.cta_non_follower_button_text ?? '팔로우 했어요',
                             ctaNonFollowerPayload: data.cta_non_follower_payload || 'FOLLOW_RECHECK',
                             ctaNonFollowerPrompt: data.cta_non_follower_prompt ?? '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
                             executionMode: data.execution_mode || 'polling',
@@ -69,7 +70,7 @@ export default function CampaignEditorPage() {
                 })
                 .catch(console.error);
         }
-    }, [isNew, params.id]);
+    }, [params.id]);
 
     // Load Instagram media posts
     useEffect(() => {
@@ -135,7 +136,7 @@ export default function CampaignEditorPage() {
         };
 
         try {
-            const url = isNew ? '/api/campaigns' : `/api/campaigns/${params.id}`;
+            const url = isNew ? '/api/campaigns' : `/api/campaigns/${campaignId}`;
             const method = isNew ? 'POST' : 'PUT';
             const res = await fetch(url, {
                 method,
@@ -143,11 +144,14 @@ export default function CampaignEditorPage() {
                 body: JSON.stringify(payload),
             });
 
+            const responseData = await res.json().catch(() => null);
             if (res.ok) {
-                router.push('/campaigns');
+                if (isNew && responseData?.id) {
+                    setCampaignId(String(responseData.id));
+                }
+                alert('저장되었습니다.');
             } else {
-                const err = await res.json();
-                alert('저장 실패: ' + (err.error || '알 수 없는 오류'));
+                alert('저장 실패: ' + (responseData?.error || '알 수 없는 오류'));
             }
         } catch (error) {
             alert('저장 실패: ' + error.message);
@@ -159,7 +163,7 @@ export default function CampaignEditorPage() {
     const handleDelete = async () => {
         if (!confirm('이 캠페인을 삭제하시겠습니까?')) return;
         try {
-            await fetch(`/api/campaigns/${params.id}`, { method: 'DELETE' });
+            await fetch(`/api/campaigns/${campaignId}`, { method: 'DELETE' });
             router.push('/campaigns');
         } catch (error) {
             alert('삭제 실패: ' + error.message);
@@ -511,8 +515,8 @@ export default function CampaignEditorPage() {
                                     background: 'rgba(59,130,246,0.08)'
                                 }}>
                                     {activeTab === 'follower'
-                                        ? (campaign.ctaFollowerButtonText || '팔로워 확인했어요')
-                                        : (campaign.ctaNonFollowerButtonText || '팔로우 했어요')}
+                                        ? (campaign.ctaFollowerButtonText ?? '팔로워 확인했어요')
+                                        : (campaign.ctaNonFollowerButtonText ?? '팔로우 했어요')}
                                 </div>
                             )}
                         </div>
@@ -527,8 +531,8 @@ export default function CampaignEditorPage() {
                                     <>
                                         <div>• 팔로워 DM: {campaign.dmFollower ? '✅ 설정됨' : '⚠️ 미설정'}</div>
                                         <div>• 비팔로워 DM: {campaign.dmNonFollower ? '✅ 설정됨' : '⚠️ 미설정'}</div>
-                                        <div>• 팔로워 CTA: {campaign.ctaFollowerEnabled ? `✅ ${campaign.ctaFollowerButtonText || '팔로워 확인했어요'}` : '❌ 사용 안 함'}</div>
-                                        <div>• 비팔로워 CTA: {campaign.ctaNonFollowerEnabled ? `✅ ${campaign.ctaNonFollowerButtonText || '팔로우 했어요'}` : '❌ 사용 안 함'}</div>
+                                        <div>• 팔로워 CTA: {campaign.ctaFollowerEnabled ? `✅ ${campaign.ctaFollowerButtonText ?? '팔로워 확인했어요'}` : '❌ 사용 안 함'}</div>
+                                        <div>• 비팔로워 CTA: {campaign.ctaNonFollowerEnabled ? `✅ ${campaign.ctaNonFollowerButtonText ?? '팔로우 했어요'}` : '❌ 사용 안 함'}</div>
                                     </>
                                 ) : (
                                     <div>• 기본 DM: {campaign.dmDefault ? '✅ 설정됨' : '⚠️ 미설정'}</div>
