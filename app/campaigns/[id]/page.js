@@ -467,11 +467,11 @@ export default function CampaignEditorPage() {
                                             if (activeTab === 'follower') updateField('ctaFollowerPrompt', e.target.value);
                                             else updateField('ctaNonFollowerPrompt', e.target.value);
                                         }}
-                                        placeholder="아래 버튼을 눌러 진행해주세요."
+                                        placeholder="공란 가능 (공란이면 버튼만 노출)"
                                     />
                                 </div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-                                    URL을 넣으면 링크 버튼으로 전송되고, 일반 텍스트를 넣으면 DM 재확인용 Payload로 처리됩니다.
+                                    URL을 넣으면 링크 버튼으로 전송되고, 일반 텍스트를 넣으면 DM 재확인용 Payload로 처리됩니다. CTA 안내 문구를 비우면 버튼만 보입니다.
                                 </div>
                             </div>
                         )}
