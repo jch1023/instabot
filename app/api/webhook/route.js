@@ -35,6 +35,10 @@ export async function POST(request) {
     try {
         const body = await request.json();
         console.log('[Webhook] 📩 Received:', JSON.stringify(body).slice(0, 200));
+        const runtimeMeta = {
+            commit: (process.env.VERCEL_GIT_COMMIT_SHA || process.env.GIT_COMMIT_SHA || 'local').slice(0, 12),
+            env: process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown',
+        };
 
         let eventType = 'unknown';
         const entries = body.entry || [];
@@ -98,7 +102,10 @@ export async function POST(request) {
         }
 
         // 최종 로그 저장
-        await saveWebhookLog(eventType, body, true, processingResults.length > 0 ? processingResults : 'No actionable handler');
+        const resultPayload = processingResults.length > 0
+            ? { runtime: runtimeMeta, results: processingResults }
+            : { runtime: runtimeMeta, results: 'No actionable handler' };
+        await saveWebhookLog(eventType, body, true, resultPayload);
 
         return NextResponse.json({ received: true });
 
