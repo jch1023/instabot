@@ -28,6 +28,12 @@ export default function CampaignEditorPage() {
         ctaNonFollowerButtonText: '팔로우 했어요',
         ctaNonFollowerPayload: 'FOLLOW_RECHECK',
         ctaNonFollowerPrompt: '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
+        replyEnabled: false,
+        replyText1: '', replyActive1: false,
+        replyText2: '', replyActive2: false,
+        replyText3: '', replyActive3: false,
+        replyText4: '', replyActive4: false,
+        replyText5: '', replyActive5: false,
         executionMode: 'polling',
     });
 
@@ -63,6 +69,12 @@ export default function CampaignEditorPage() {
                             ctaNonFollowerButtonText: data.cta_non_follower_button_text ?? '팔로우 했어요',
                             ctaNonFollowerPayload: data.cta_non_follower_payload || 'FOLLOW_RECHECK',
                             ctaNonFollowerPrompt: data.cta_non_follower_prompt ?? '아래 버튼을 눌러 팔로우 상태를 다시 확인해주세요.',
+                            replyEnabled: !!data.reply_enabled,
+                            replyText1: data.reply_text_1 || '', replyActive1: !!data.reply_active_1,
+                            replyText2: data.reply_text_2 || '', replyActive2: !!data.reply_active_2,
+                            replyText3: data.reply_text_3 || '', replyActive3: !!data.reply_active_3,
+                            replyText4: data.reply_text_4 || '', replyActive4: !!data.reply_active_4,
+                            replyText5: data.reply_text_5 || '', replyActive5: !!data.reply_active_5,
                             executionMode: data.execution_mode || 'polling',
                         });
                         if (data.check_follower) setActiveTab('follower');
@@ -131,6 +143,12 @@ export default function CampaignEditorPage() {
             cta_non_follower_button_text: campaign.ctaNonFollowerButtonText,
             cta_non_follower_payload: campaign.ctaNonFollowerPayload,
             cta_non_follower_prompt: campaign.ctaNonFollowerPrompt,
+            reply_enabled: campaign.replyEnabled,
+            reply_text_1: campaign.replyText1, reply_active_1: campaign.replyActive1,
+            reply_text_2: campaign.replyText2, reply_active_2: campaign.replyActive2,
+            reply_text_3: campaign.replyText3, reply_active_3: campaign.replyActive3,
+            reply_text_4: campaign.replyText4, reply_active_4: campaign.replyActive4,
+            reply_text_5: campaign.replyText5, reply_active_5: campaign.replyActive5,
             is_active: campaign.isActive,
             execution_mode: campaign.executionMode,
         };
@@ -480,6 +498,76 @@ export default function CampaignEditorPage() {
                             </div>
                         )}
                     </div>
+
+                    {/* Auto Reply (대댓글) Settings */}
+                    <div className="card">
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            💬 자동 대댓글 설정
+                        </h3>
+
+                        <div className="toggle-wrapper">
+                            <div className="toggle-info">
+                                <div className="toggle-title">대댓글 자동 달기</div>
+                                <div className="toggle-desc">DM 발송 후 원본 댓글에 자동으로 대댓글을 답니다</div>
+                            </div>
+                            <label className="toggle">
+                                <input
+                                    type="checkbox"
+                                    checked={campaign.replyEnabled}
+                                    onChange={e => updateField('replyEnabled', e.target.checked)}
+                                />
+                                <span className="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        {campaign.replyEnabled && (
+                            <div className="animate-fade-in" style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', padding: '10px 12px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+                                    💡 체크된 대댓글만 <strong>순서대로 순환</strong>하며 사용됩니다. 변수: <code>{'{username}'}</code> = 댓글 작성자, <code>{'{comment}'}</code> = 댓글 내용
+                                </div>
+                                {[1, 2, 3, 4, 5].map(i => {
+                                    const textKey = `replyText${i}`;
+                                    const activeKey = `replyActive${i}`;
+                                    return (
+                                        <div key={i} style={{
+                                            padding: '12px',
+                                            background: campaign[activeKey] ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: campaign[activeKey] ? '1px solid var(--primary)' : '1px solid var(--border)',
+                                            opacity: campaign[activeKey] ? 1 : 0.7,
+                                            transition: 'all 0.2s ease',
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!campaign[activeKey]}
+                                                        onChange={e => updateField(activeKey, e.target.checked)}
+                                                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                                                    />
+                                                    대댓글 {i}
+                                                </label>
+                                                {campaign[activeKey] && (
+                                                    <span style={{ fontSize: '11px', color: 'var(--primary-light)', background: 'rgba(59,130,246,0.1)', padding: '2px 8px', borderRadius: '999px' }}>활성</span>
+                                                )}
+                                            </div>
+                                            <textarea
+                                                className="form-textarea"
+                                                placeholder={`대댓글 ${i} 내용을 입력하세요... 예: @{username} 님 DM 보내드렸어요! 확인해주세요 😊`}
+                                                value={campaign[textKey]}
+                                                onChange={e => updateField(textKey, e.target.value)}
+                                                rows={2}
+                                                style={{ marginBottom: 0 }}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                    ℹ️ 체크된 대댓글: {[1, 2, 3, 4, 5].filter(i => campaign[`replyActive${i}`] && campaign[`replyText${i}`]).length}개 활성 중
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Right: Preview */}
@@ -504,21 +592,21 @@ export default function CampaignEditorPage() {
                                 ((activeTab === 'follower' && campaign.ctaFollowerEnabled) ||
                                     (activeTab !== 'follower' && campaign.ctaNonFollowerEnabled))
                             ) && (
-                                <div style={{
-                                    marginTop: '8px',
-                                    display: 'inline-block',
-                                    fontSize: '12px',
-                                    padding: '7px 10px',
-                                    borderRadius: '999px',
-                                    border: '1px solid var(--primary)',
-                                    color: 'var(--primary-light)',
-                                    background: 'rgba(59,130,246,0.08)'
-                                }}>
-                                    {activeTab === 'follower'
-                                        ? (campaign.ctaFollowerButtonText ?? '팔로워 확인했어요')
-                                        : (campaign.ctaNonFollowerButtonText ?? '팔로우 했어요')}
-                                </div>
-                            )}
+                                    <div style={{
+                                        marginTop: '8px',
+                                        display: 'inline-block',
+                                        fontSize: '12px',
+                                        padding: '7px 10px',
+                                        borderRadius: '999px',
+                                        border: '1px solid var(--primary)',
+                                        color: 'var(--primary-light)',
+                                        background: 'rgba(59,130,246,0.08)'
+                                    }}>
+                                        {activeTab === 'follower'
+                                            ? (campaign.ctaFollowerButtonText ?? '팔로워 확인했어요')
+                                            : (campaign.ctaNonFollowerButtonText ?? '팔로우 했어요')}
+                                    </div>
+                                )}
                         </div>
 
                         <div style={{ marginTop: '16px', padding: '14px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
